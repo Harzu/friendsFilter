@@ -3,7 +3,6 @@ import _config from './config'
 export default class VKApi {
   constructor () {
     this.VK = VK
-    console.log(this.VK)
     this.VK.init({apiId: _config.appId}, '5.72')
     this.auth()
   }

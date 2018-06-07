@@ -3,7 +3,6 @@ import Render from './render'
 import _config from './config'
 import './utils'
 
-const _currentItem = {}
 let _items = {
   left: [],
   right: []
@@ -14,78 +13,10 @@ export default class FriendsFilter {
     this.vk = new VKApi()
     this.Render = new Render()
     this.storage()
-
-    const filter = document.querySelector('.filter')
-    const search = document.querySelector('.search__form')
-    const close = document.querySelector('.header__close-link')
-    const save = document.querySelector('.footer__save-link')
-
-    filter.addEventListener('click', e => {
-      const targ = e.target
-      if (targ.nodeName === 'A' &&
-            targ.parentNode.classList.contains('filter-friends__add')) {
-        const id = e.target.getAttribute('data-id')
-        this.refreshTable({
-          id: id,
-          startZone: 'left',
-          finishZone: 'right'
-        })
-      }
-
-      if (targ.nodeName === 'A' &&
-            targ.parentNode.classList.contains('filter-friends__delete')) {
-        const id = e.target.getAttribute('data-id')
-        this.refreshTable({
-          id: id,
-          startZone: 'right',
-          finishZone: 'left'
-        })
-      }
-    })
-
-    filter.addEventListener('dragstart', e => {
-      const targ = e.target
-
-      _currentItem['id'] = targ.getAttribute('data-id')
-      _currentItem['zone'] = targ.getAttribute('data-zone')
-      e.dataTransfer.effectAllowed = 'move'
-    })
-
-    filter.addEventListener('dragenter', e => {
-      e.preventDefault()
-    })
-
-    filter.addEventListener('dragover', e => {
-      e.preventDefault()
-    })
-
-    filter.addEventListener('drop', e => {
-      e.preventDefault()
-      this.drop(e.target)
-    })
-
-    search.addEventListener('input', e => {
-      const targ = e.target
-      if (targ.classList.contains('search__inp--left')) {
-        this.filter(targ.value, 'left')
-      }
-
-      if (targ.classList.contains('search__inp--right')) {
-        this.filter(targ.value, 'right')
-      }
-    })
-
-    save.addEventListener('click', this.save)
-    close.addEventListener('click', e => {
-      e.preventDefault()
-      localStorage.clear()
-      window.location.reload()
-    }, {once: true})
   }
 
   async storage () {
     const friends = localStorage.getItem('friendsList')
-    console.log(this.vk.VK)
     const getFriends = await this.vk.getFriends('friends.get', {
       v: _config.versionApi,
       'user_id': _config.id,
@@ -133,17 +64,15 @@ export default class FriendsFilter {
     })
   }
 
-  drop (target) {
-    if (['left', 'right'].includes(target.getAttribute('data-zone'))) {
-      return this.refreshTable({
-        id: _currentItem.id,
-        startZone: _currentItem.zone,
-        finishZone: target.getAttribute('data-zone')
-      })
+  getCurrentZone (target) {
+    const zone = target.getAttribute('data-zone')
+
+    if (['left', 'right'].includes(zone)) {
+      return zone
     }
 
     if (target.parentElement) {
-      this.drop(target.parentElement)
+      return this.getCurrentZone(target.parentElement)
     }
   }
 
@@ -161,11 +90,13 @@ export default class FriendsFilter {
   }
 
   refreshTable (params) {
-    _items[params.startZone].forEach((item, i) => {
+    const finishZone = (params.zone === 'left') ? 'right' : 'left'
+
+    _items[params.zone].forEach((item, i) => {
       if (item.user_id === Number(params.id) &&
-            params.startZone !== params.finishZone) {
-        _items[params.startZone].splice(i, 1)
-        _items[params.finishZone].push(item)
+            params.zone !== finishZone) {
+        _items[params.zone].splice(i, 1)
+        _items[finishZone].push(item)
       }
     })
 

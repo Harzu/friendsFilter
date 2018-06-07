@@ -20,7 +20,6 @@ export default class Render {
       li.classList.add('filter-friends__item')
       li.setAttribute('draggable', true)
       li.setAttribute('data-id', friend.user_id)
-      li.setAttribute('data-zone', zone)
       li.innerHTML = `
             <div class="filter-friends__item-container">
                 <img class="filter-friends__img" src="${friend.photo_50}" alt="photo" draggable="false">
